@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PaySecure — UPI Fraud Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0f2f7;--white:#ffffff;--surface:#f7f8fc;
+  --border:#e4e8f0;--border2:#d0d6e8;
+  --primary:#4f46e5;--primary2:#3730a3;--primary-light:#eef2ff;--primary-mid:#c7d2fe;
+  --red:#ef4444;--red-light:#fef2f2;--red-mid:#fecaca;
+  --green:#10b981;--green-light:#ecfdf5;--green-mid:#a7f3d0;
+  --yellow:#f59e0b;--yellow-light:#fffbeb;
+  --text:#1e2a3b;--text2:#5a6a85;--text3:#9aaabb;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --radius:16px;--radius-sm:10px;--radius-xs:6px;
+  --shadow:0 1px 4px rgba(30,42,59,0.08),0 4px 16px rgba(30,42,59,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+
+/* ── Sidebar ── */
+.sidebar{width:220px;min-height:100vh;background:var(--primary2);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+.main{margin-left:220px;flex:1;}
+.sidebar-logo{padding:24px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.logo-mark{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.logo-text{font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.3px;}
+.logo-text span{color:#a5b4fc;}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px;letter-spacing:.5px;text-transform:uppercase;}
+.nav{padding:14px 12px;flex:1;}
+.nav-section{font-size:10px;color:rgba(255,255,255,0.35);font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:10px 10px 5px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--radius-xs);cursor:pointer;transition:all .15s;color:rgba(255,255,255,0.6);font-size:13.5px;font-weight:500;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,0.18);color:#fff;font-weight:600;}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,0.1);}
+.sidebar-badge{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:10px;}
+.sidebar-badge-title{font-size:11px;font-weight:600;color:#a5b4fc;margin-bottom:2px;}
+.sidebar-badge-sub{font-size:11px;color:rgba(255,255,255,0.4);}
+.credit{display:flex;align-items:center;gap:6px;}
+.credit-check{width:20px;height:20px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;flex-shrink:0;}
+.credit-text{font-size:10px;color:rgba(255,255,255,0.35);line-height:1.4;}
+
+/* ── Topbar ── */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text);}
+.topbar-title span{color:var(--primary);}
+
+/* ── Pages ── */
+.page{display:none;padding:28px;animation:fadeIn .25s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.section-header{margin-bottom:22px;}
+.section-title{font-size:22px;font-weight:700;letter-spacing:-0.4px;}
+.section-title span{color:var(--primary);}
+.section-sub{font-size:13px;color:var(--text2);margin-top:3px;}
+
+/* ── Grid ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;}
+
+/* ── Card ── */
+.card{background:var(--white);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.card-title{font-size:14px;font-weight:600;color:var(--text);}
+.card-tag{font-size:11px;color:var(--text3);background:var(--surface);padding:3px 10px;border-radius:20px;border:1px solid var(--border);}
+
+/* ── Stat Cards ── */
+.stat-card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
+.stat-label{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:4px;}
+.stat-value{font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+.stat-sub{font-size:12px;color:var(--text3);margin-top:3px;}
+
+/* ── Form ── */
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.3px;text-transform:uppercase;}
+.form-select{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-xs);padding:9px 32px 9px 12px;color:var(--text);font-family:var(--font);font-size:13.5px;cursor:pointer;transition:border-color .15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%239aaabb' d='M5 7L1 3h8z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:var(--surface);}
+.form-select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,0.1);}
+
+/* ── Toggle ── */
+.toggle-group{display:flex;gap:6px;}
+.toggle-btn{flex:1;padding:8px;border-radius:var(--radius-xs);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;}
+.toggle-btn:hover{border-color:var(--border2);}
+.toggle-btn.active-yes{background:var(--primary-light);border-color:var(--primary);color:var(--primary);font-weight:600;}
+.toggle-btn.active-no{background:#f1f5f9;border-color:#94a3b8;color:#334155;font-weight:600;}
+
+/* ── Predict Button ── */
+.predict-btn{width:100%;padding:12px;background:var(--primary);border:none;border-radius:var(--radius-xs);color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:6px;}
+.predict-btn:hover{background:var(--primary2);box-shadow:0 4px 16px rgba(79,70,229,0.3);}
+
+/* ── Result Panel ── */
+.result-panel{background:var(--white);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.result-title{font-size:15px;font-weight:600;}
+.risk-pill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.risk-pill.high{background:var(--red-light);color:var(--red);}
+.risk-pill.low{background:var(--green-light);color:var(--green);}
+.gauge-num{text-align:center;margin-bottom:8px;}
+.gauge-prob{font-size:44px;font-weight:800;letter-spacing:-1px;}
+.gauge-sub{font-size:12px;color:var(--text2);}
+.prob-bar-wrap{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-bottom:18px;}
+.prob-bar{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1);}
+
+/* ── Reasons (fixed) ── */
+.why-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+.reason-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--radius-xs);margin-bottom:6px;font-size:13px;font-weight:500;}
+.reason-item.flag{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
+.reason-item.flag::before{content:'⚠';font-size:14px;}
+.reason-item.ok{background:var(--green-light);color:#065f46;border:1px solid var(--green-mid);}
+.reason-item.ok::before{content:'✓';font-size:14px;}
+.result-note{font-size:11px;color:var(--text3);text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.result-empty{text-align:center;padding:40px 20px;color:var(--text3);}
+.result-empty-icon{font-size:44px;margin-bottom:12px;}
+.result-empty-text{font-size:13px;line-height:1.6;}
+
+/* ── Test Cards (Inference Lab) ── */
+.test-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+.test-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.test-name{font-size:14px;font-weight:600;}
+.test-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.test-pill.sig{background:var(--green-light);color:var(--green);}
+.test-pill.insig{background:var(--surface);color:var(--text2);border:1px solid var(--border);}
+.test-body{padding:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.test-stat{text-align:center;padding:12px;background:var(--surface);border-radius:var(--radius-xs);}
+.test-stat-val{font-size:20px;font-weight:700;color:var(--primary);font-family:var(--mono);}
+.test-stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
+.test-interp{padding:12px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:12.5px;color:var(--text2);line-height:1.5;}
+
+/* ── Table ── */
+table.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border);background:var(--surface);}
+.data-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--surface);}
+
+/* ── About ── */
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+.method-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);padding:14px;}
+.method-icon{font-size:22px;margin-bottom:6px;}
+.method-name{font-size:13px;font-weight:600;margin-bottom:3px;}
+.method-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.pipeline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pipe-step{background:var(--primary-light);border:1px solid var(--primary-mid);border-radius:var(--radius-xs);padding:7px 12px;font-size:12px;font-weight:500;color:var(--primary);}
+.pipe-arrow{color:var(--text3);}
+
+/* ── HOME overview cards ── */
+.overview-card{background:var(--white);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:flex-start;gap:14px;}
+.ov-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.ov-label{font-size:12px;color:var(--text2);font-weight:500;margin-bottom:3px;}
+.ov-value{font-size:26px;font-weight:700;letter-spacing:-0.5px;line-height:1;}
+.ov-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
+/* ── Hero banner ── */
+.hero{background:linear-gradient(135deg,var(--primary2) 0%,var(--primary) 100%);border-radius:var(--radius);padding:32px;margin-bottom:22px;color:#fff;display:flex;align-items:center;justify-content:space-between;}
+.hero-left h1{font-size:26px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px;}
+.hero-left h1 span{color:#a5b4fc;}
+.hero-left p{font-size:13.5px;color:rgba(255,255,255,0.7);line-height:1.6;max-width:420px;}
+.hero-stats{display:flex;gap:24px;}
+.hero-stat{text-align:center;}
+.hero-stat-val{font-size:28px;font-weight:800;letter-spacing:-0.5px;}
+.hero-stat-lbl{font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px;}
+
+/* ── How it works steps ── */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.step{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);position:relative;}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--primary-light);border:2px solid var(--primary-mid);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--primary);margin-bottom:10px;}
+.step-title{font-size:13px;font-weight:600;margin-bottom:4px;}
+.step-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* ── Chart ── */
+.chart-wrap{position:relative;height:200px;}
+.chart-wrap-lg{position:relative;height:240px;}
+
+/* ── Loading ── */
+.loading{display:flex;align-items:center;justify-content:center;height:160px;color:var(--text3);font-size:13px;gap:8px;}
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">🛡</div>
+      <div><div class="logo-text">Pay<span>Secure</span></div><div class="logo-sub">Fraud Intelligence</div></div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" data-page="home" onclick="showPage('home',this)"><span class="nav-icon">⊞</span> Home</div>
+    <div class="nav-item" data-page="predictor" onclick="showPage('predictor',this)"><span class="nav-icon">◎</span> Fraud Predictor</div>
+    <div class="nav-item" data-page="dashboard" onclick="showPage('dashboard',this)"><span class="nav-icon">▦</span> Dashboard</div>
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item" data-page="inference" onclick="showPage('inference',this)"><span class="nav-icon">⚗</span> Inference Lab</div>
+    <div class="nav-item" data-page="models" onclick="showPage('models',this)"><span class="nav-icon">◈</span> Model Report</div>
+
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-badge"><div class="sidebar-badge-title">AUC-ROC: 0.90</div><div class="sidebar-badge-sub">Logistic Regression Model</div></div>
+    <div class="credit"><div class="credit-check">✓</div><div class="credit-text">Built with Statistical<br>Inference &amp; ML</div></div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">UPI <span>Fraud Detection</span></div>
+
+  </div>
+
+  <!-- ══════════════ HOME PAGE ══════════════ -->
+  <div id="page-home" class="page active">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-left">
+        <h1>UPI <span>Fraud Detection</span><br>using Statistical Inference</h1>
+        <p>Primary survey data collected from 202 real respondents. Full ML pipeline with MLE, Hypothesis Testing, and Logistic Regression to detect fraudulent UPI transactions.</p>
+      </div>
+      <div class="hero-stats" id="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-val" style="color:#a5b4fc;">—</div><div class="hero-stat-lbl">Total Responses</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" style="color:#fca5a5;">—</div><div class="hero-stat-lbl">Fraud Cases</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" style="color:#6ee7b7;">—</div><div class="hero-stat-lbl">AUC-ROC Score</div></div>
+      </div>
+    </div>
+
+    <!-- Overview stats -->
+    <div class="grid-4" style="margin-bottom:22px;" id="home-overview">
+      <div class="overview-card"><div class="ov-icon" style="background:#eef2ff;">📊</div><div><div class="ov-label">Total Responses</div><div class="ov-value" id="ov-total">—</div><div class="ov-sub">Real survey data</div></div></div>
+      <div class="overview-card"><div class="ov-icon" style="background:#fef2f2;">🚨</div><div><div class="ov-label">Fraud Cases</div><div class="ov-value" id="ov-fraud" style="color:var(--red)">—</div><div class="ov-sub" id="ov-ci">95% CI: —</div></div></div>
+      <div class="overview-card"><div class="ov-icon" style="background:#ecfdf5;">✅</div><div><div class="ov-label">Legit Transactions</div><div class="ov-value" id="ov-legit" style="color:var(--green)">—</div><div class="ov-sub">Non-fraudulent</div></div></div>
+      <div class="overview-card"><div class="ov-icon" style="background:#fffbeb;">🎯</div><div><div class="ov-label">Model AUC-ROC</div><div class="ov-value" id="ov-auc" style="color:var(--yellow)">—</div><div class="ov-sub">Logistic Regression</div></div></div>
+    </div>
+
+    <!-- How it works -->
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-title">Real Survey Data</div><div class="step-desc">202 responses collected via Google Forms capturing UPI behaviour</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-title">Statistical Tests</div><div class="step-desc">MLE, Z-test, Chi-square, T-test on real data</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-title">Model Training</div><div class="step-desc">Logistic Regression with Ridge &amp; Lasso regularization</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-title">Live Prediction</div><div class="step-desc">Enter transaction details → get real-time fraud probability</div></div>
+    </div>
+
+    <!-- Mini charts -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Fraud vs Non-Fraud Distribution</div><div class="card-tag">202 responses</div></div>
+        <div class="chart-wrap"><canvas id="h-pie"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Fraud Rate by Time of Day</div><div class="card-tag">Survey data</div></div>
+        <div class="chart-wrap"><canvas id="h-time-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ FRAUD PREDICTOR ══════════════ -->
+  <div id="page-predictor" class="page">
+    <div class="section-header"><div class="section-title">Fraud <span>Predictor</span></div><div class="section-sub">Enter transaction details to get a real-time fraud probability score</div></div>
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+      <div class="card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="form-group"><div class="form-label">Amount Range</div><select class="form-select" id="p-amount"><option value="1">₹0–₹500</option><option value="2">₹500–₹2,000</option><option value="3" selected>₹2,000–₹10,000</option><option value="4">₹10,000+</option></select></div>
+          <div class="form-group"><div class="form-label">Time of Transaction</div><select class="form-select" id="p-time"><option value="0">Morning</option><option value="1">Afternoon</option><option value="2" selected>Evening</option><option value="3">Night</option></select></div>
+          <div class="form-group"><div class="form-label">Recipient Type</div><select class="form-select" id="p-recip"><option value="0">Friend / Family</option><option value="1">Merchant</option><option value="2">Unknown Person</option></select></div>
+          <div class="form-group"><div class="form-label">Daily Frequency</div><select class="form-select" id="p-freq"><option value="1">Low (1–2)</option><option value="2" selected>Medium (3–5)</option><option value="3">High (6+)</option></select></div>
+          <div class="form-group"><div class="form-label">Gender</div><select class="form-select" id="p-gender"><option value="0">Female</option><option value="1">Male</option></select></div>
+          <div class="form-group"><div class="form-label">Age</div><select class="form-select" id="p-age"><option value="18">18–20</option><option value="22" selected>21–25</option><option value="28">26–30</option><option value="35">31–40</option><option value="45">41+</option></select></div>
+          <div class="form-group"><div class="form-label">New Recipient?</div><div class="toggle-group"><button class="toggle-btn" id="t-nr-yes" onclick="tg('nr','yes')">Yes</button><button class="toggle-btn active-no" id="t-nr-no" onclick="tg('nr','no')">No</button></div></div>
+          <div class="form-group"><div class="form-label">Different Location?</div><div class="toggle-group"><button class="toggle-btn" id="t-dl-yes" onclick="tg('dl','yes')">Yes</button><button class="toggle-btn active-no" id="t-dl-no" onclick="tg('dl','no')">No</button></div></div>
+          <div class="form-group"><div class="form-label">Multiple Txns (1 hr)?</div><div class="toggle-group"><button class="toggle-btn" id="t-mt-yes" onclick="tg('mt','yes')">Yes</button><button class="toggle-btn active-no" id="t-mt-no" onclick="tg('mt','no')">No</button></div></div>
+          <div class="form-group"><div class="form-label">Suspicious Link?</div><div class="toggle-group"><button class="toggle-btn" id="t-sl-yes" onclick="tg('sl','yes')">Yes</button><button class="toggle-btn active-no" id="t-sl-no" onclick="tg('sl','no')">No</button></div></div>
+          <div class="form-group" style="grid-column:span 2;"><div class="form-label">Asked for OTP / UPI PIN?</div><div class="toggle-group" style="max-width:200px;"><button class="toggle-btn" id="t-otp-yes" onclick="tg('otp','yes')">Yes</button><button class="toggle-btn active-no" id="t-otp-no" onclick="tg('otp','no')">No</button></div></div>
+        </div>
+        <button class="predict-btn" onclick="predict()">🛡 Check Fraud Risk</button>
+      </div>
+      <div class="result-panel" id="result-panel">
+        <div class="result-empty"><div class="result-empty-icon">🔐</div><div class="result-empty-text">Fill the form and click<br><strong>Check Fraud Risk</strong><br><span style="font-size:11px;color:var(--text3);">Results will appear here</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ DASHBOARD ══════════════ -->
+  <div id="page-dashboard" class="page">
+    <div class="section-header"><div class="section-title">Data <span>Dashboard</span></div><div class="section-sub">Visual exploration of 202 real survey responses</div></div>
+    <div class="grid-2" style="margin-bottom:18px;">
+      <div class="card"><div class="card-header"><div class="card-title">Age Distribution</div><div class="card-tag">MLE: Normal Fit</div></div><div class="chart-wrap-lg"><canvas id="chart-age"></canvas></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">ROC Curve</div><div class="card-tag" id="auc-tag">AUC: —</div></div><div class="chart-wrap-lg"><canvas id="chart-roc"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Ridge Regression — Feature Coefficients</div><div class="card-tag">Regularized Model</div></div><div class="chart-wrap-lg"><canvas id="chart-coef"></canvas></div></div>
+  </div>
+
+  <!-- ══════════════ INFERENCE LAB ══════════════ -->
+  <div id="page-inference" class="page">
+    <div class="section-header"><div class="section-title">Statistical <span>Inference Lab</span></div><div class="section-sub">All hypothesis tests run on real survey data</div></div>
+    <div id="inference-content"><div class="loading"><div class="spinner"></div> Loading test results…</div></div>
+  </div>
+
+  <!-- ══════════════ MODEL REPORT ══════════════ -->
+  <div id="page-models" class="page">
+    <div class="section-header"><div class="section-title">Model <span>Report</span></div><div class="section-sub">Logistic Regression · Ridge · Lasso</div></div>
+    <div class="grid-3" id="model-stats" style="margin-bottom:18px;"><div class="loading"><div class="spinner"></div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Lasso Feature Selection</div><div class="card-tag">L1 Regularization</div></div><div id="lasso-table"><div class="loading"><div class="spinner"></div></div></div></div>
+  </div>
+
+
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+const API = '';
+let S = null, C = null, T = null;
+let dashBuilt = false, homeChartsBuilt = false, modelsBuilt = false;
+
+// Toggle state — all start as "No" by default
+const ts = { nr:'no', dl:'no', mt:'no', sl:'no', otp:'no' };
+
+// ── Page routing ──────────────────────────────────────────────────────────────
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  else document.querySelectorAll(`[data-page="${id}"]`).forEach(n => n.classList.add('active'));
+
+  if (id === 'dashboard' && C && !dashBuilt) buildDash();
+  if (id === 'inference') loadInference();
+  if (id === 'models' && C && !modelsBuilt) buildModels();
+}
+
+// ── Toggle buttons ────────────────────────────────────────────────────────────
+function tg(f, v) {
+  ts[f] = v;
+  const yes = document.getElementById(`t-${f}-yes`);
+  const no  = document.getElementById(`t-${f}-no`);
+  yes.className = 'toggle-btn' + (v === 'yes' ? ' active-yes' : '');
+  no.className  = 'toggle-btn' + (v === 'no'  ? ' active-no'  : '');
+}
+
+// ── Load all data on boot ─────────────────────────────────────────────────────
+async function init() {
+  try {
+    [S, C] = await Promise.all([
+      fetch(API + '/api/stats').then(r => r.json()),
+      fetch(API + '/api/charts').then(r => r.json())
+    ]);
+    populateHome();
+    buildHomeCharts();
+  } catch(e) { console.error('Init error:', e); }
+}
+
+// ── Home overview numbers ─────────────────────────────────────────────────────
+function populateHome() {
+  document.getElementById('ov-total').textContent = S.total;
+  document.getElementById('ov-fraud').textContent = S.fraud;
+  document.getElementById('ov-legit').textContent = S.legit;
+  document.getElementById('ov-auc').textContent   = S.auc;
+  document.getElementById('ov-ci').textContent    = `95% CI: ${S.ci_lower}%–${S.ci_upper}%`;
+
+  // Hero stats
+  document.getElementById('hero-stats').innerHTML = `
+    <div class="hero-stat"><div class="hero-stat-val" style="color:#a5b4fc;">${S.total}</div><div class="hero-stat-lbl">Total Responses</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" style="color:#fca5a5;">${S.fraud_rate}%</div><div class="hero-stat-lbl">Fraud Rate</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" style="color:#6ee7b7;">${S.auc}</div><div class="hero-stat-lbl">AUC-ROC Score</div></div>`;
+}
+
+// ── Home charts ───────────────────────────────────────────────────────────────
+function buildHomeCharts() {
+  if (homeChartsBuilt) return;
+  homeChartsBuilt = true;
+  const co = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } };
+
+  new Chart('h-pie', {
+    type: 'doughnut',
+    data: {
+      labels: ['Fraud','Non-Fraud'],
+      datasets: [{ data:[S.fraud, S.legit], backgroundColor:['rgba(239,68,68,0.85)','rgba(16,185,129,0.85)'], borderWidth:0 }]
+    },
+    options: {
+      ...co, cutout:'65%',
+      plugins:{ legend:{ display:true, position:'bottom', labels:{ color:'#5a6a85', font:{ family:'DM Sans', size:12 }, padding:16 } } }
+    }
+  });
+
+  const tk = Object.keys(C.time_fraud);
+  const tv = Object.values(C.time_fraud).map(v => +(v*100).toFixed(1));
+  new Chart('h-time-chart', {
+    type: 'bar',
+    data: {
+      labels: tk.map(t => t.split('(')[0].trim()),
+      datasets: [{ data:tv, backgroundColor:tv.map(v => v>20 ? 'rgba(239,68,68,0.7)' : 'rgba(79,70,229,0.5)'), borderRadius:4, borderWidth:0 }]
+    },
+    options: { ...co, scales:{ y:{ ticks:{ color:'#9aaabb', font:{size:10}, callback:v=>v+'%' }, grid:{ color:'#e4e8f0' } }, x:{ ticks:{ color:'#9aaabb', font:{size:10} }, grid:{ display:false } } } }
+  });
+}
+
+// ── Dashboard charts ──────────────────────────────────────────────────────────
+function buildDash() {
+  dashBuilt = true;
+  document.getElementById('auc-tag').textContent = `AUC: ${S.auc}`;
+  const co = { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#5a6a85', font:{ family:'DM Sans', size:12 } } } } };
+
+  // Age histogram
+  const ages = C.ages;
+  const bins = [15,20,25,30,35,40,45,50,55,60,65,70];
+  const cnt = new Array(bins.length-1).fill(0);
+  ages.forEach(a => { for(let i=0;i<bins.length-1;i++) if(a>=bins[i]&&a<bins[i+1]){cnt[i]++;break;} });
+  new Chart('chart-age', {
+    type:'bar',
+    data:{ labels:bins.slice(0,-1).map((b,i)=>`${b}-${bins[i+1]}`), datasets:[{ label:'Respondents', data:cnt, backgroundColor:'rgba(79,70,229,0.5)', borderColor:'rgba(79,70,229,0.8)', borderWidth:1, borderRadius:4 }] },
+    options:{ ...co, plugins:{...co.plugins,legend:{display:false}}, scales:{ y:{ ticks:{color:'#9aaabb'}, grid:{color:'#e4e8f0'} }, x:{ ticks:{color:'#9aaabb'}, grid:{display:false} } } }
+  });
+
+  // ROC
+  new Chart('chart-roc', {
+    type:'line',
+    data:{ labels:C.roc_fpr.map(v=>(+v).toFixed(2)), datasets:[
+      { label:`ROC (AUC=${S.auc})`, data:C.roc_tpr, borderColor:'#4f46e5', backgroundColor:'rgba(79,70,229,0.08)', fill:true, pointRadius:0, tension:0.4, borderWidth:2 },
+      { label:'Random', data:C.roc_fpr, borderColor:'#d0d6e8', borderDash:[4,4], pointRadius:0, borderWidth:1 }
+    ]},
+    options:{ ...co, scales:{ x:{ title:{display:true,text:'False Positive Rate',color:'#9aaabb'}, ticks:{color:'#9aaabb',maxTicksLimit:6}, grid:{color:'#e4e8f0'} }, y:{ title:{display:true,text:'True Positive Rate',color:'#9aaabb'}, ticks:{color:'#9aaabb'}, grid:{color:'#e4e8f0'} } } }
+  });
+
+  // Ridge coefs
+  const ck = Object.keys(C.ridge_coef).map(k=>k.replace(/_enc$/,'').replace(/_/g,' '));
+  const cv = Object.values(C.ridge_coef).map(Number);
+  new Chart('chart-coef', {
+    type:'bar',
+    data:{ labels:ck, datasets:[{ data:cv, backgroundColor:cv.map(v=>v>0?'rgba(79,70,229,0.6)':'rgba(239,68,68,0.6)'), borderColor:cv.map(v=>v>0?'#4f46e5':'#ef4444'), borderWidth:1, borderRadius:3 }] },
+    options:{ ...co, indexAxis:'y', plugins:{...co.plugins,legend:{display:false}}, scales:{ x:{ ticks:{color:'#9aaabb'}, grid:{color:'#e4e8f0'} }, y:{ ticks:{color:'#5a6a85',font:{size:11}}, grid:{display:false} } } }
+  });
+}
+
+// ── Inference Lab ─────────────────────────────────────────────────────────────
+async function loadInference() {
+  const el = document.getElementById('inference-content');
+  // If already loaded don't re-fetch
+  if (T) { renderInference(); return; }
+  el.innerHTML = '<div class="loading"><div class="spinner"></div> Running statistical tests…</div>';
+  try {
+    T = await fetch(API + '/api/tests').then(r => r.json());
+    renderInference();
+  } catch(e) {
+    el.innerHTML = '<div class="loading" style="color:var(--red);">Failed to load test results. Is the server running?</div>';
+    console.error(e);
+  }
+}
+
+function renderInference() {
+  const sig = s => s
+    ? `<span class="test-pill sig">✓ Significant</span>`
+    : `<span class="test-pill insig">Not Significant</span>`;
+
+  document.getElementById('inference-content').innerHTML = `
+    <div class="test-card">
+      <div class="test-header"><div class="test-name">1. Maximum Likelihood Estimation — Age Distribution</div>${sig(true)}</div>
+      <div class="test-body">
+        <div class="test-stat"><div class="test-stat-val">${T.mle.mu}</div><div class="test-stat-lbl">Mean μ (MLE)</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.mle.std}</div><div class="test-stat-lbl">Std Dev σ</div></div>
+        <div class="test-stat"><div class="test-stat-val">Normal</div><div class="test-stat-lbl">Distribution</div></div>
+      </div>
+      <div class="test-interp">MLE estimates parameters that maximize the likelihood of observing the data. Age is modelled as Age ~ N(μ=${T.mle.mu}, σ=${T.mle.std}).</div>
+    </div>
+
+    <div class="test-card">
+      <div class="test-header"><div class="test-name">2. Confidence Interval — Fraud Rate (95%)</div>${sig(true)}</div>
+      <div class="test-body">
+        <div class="test-stat"><div class="test-stat-val">${T.ci.p}%</div><div class="test-stat-lbl">Observed Rate</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.ci.lower}%</div><div class="test-stat-lbl">Lower Bound</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.ci.upper}%</div><div class="test-stat-lbl">Upper Bound</div></div>
+      </div>
+      <div class="test-interp">We are 95% confident the true population fraud rate lies between ${T.ci.lower}% and ${T.ci.upper}%.</div>
+    </div>
+
+    <div class="test-card">
+      <div class="test-header"><div class="test-name">3. Z-Test — Night vs Day Fraud Rate</div>${sig(T.ztest.significant)}</div>
+      <div class="test-body">
+        <div class="test-stat"><div class="test-stat-val">${T.ztest.stat}</div><div class="test-stat-lbl">Z-Statistic</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.ztest.p}</div><div class="test-stat-lbl">p-value</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.ztest.night_rate}% / ${T.ztest.day_rate}%</div><div class="test-stat-lbl">Night / Day Rate</div></div>
+      </div>
+      <div class="test-interp">H₀: Night fraud rate = Day fraud rate. ${T.ztest.significant ? 'Rejected — night transactions show significantly higher fraud.' : 'Cannot reject H₀ at α=0.05. No significant difference between night and day fraud rates.'}</div>
+    </div>
+
+    <div class="test-card">
+      <div class="test-header"><div class="test-name">4. Chi-Square Test — Fraud vs Recipient Type</div>${sig(T.chi.significant)}</div>
+      <div class="test-body">
+        <div class="test-stat"><div class="test-stat-val">${T.chi.stat}</div><div class="test-stat-lbl">χ² Statistic</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.chi.p}</div><div class="test-stat-lbl">p-value</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.chi.dof}</div><div class="test-stat-lbl">Degrees of Freedom</div></div>
+      </div>
+      <div class="test-interp">H₀: Fraud is independent of recipient type. ${T.chi.significant ? 'Rejected — recipient type is significantly associated with fraud.' : 'Cannot reject H₀ at α=0.05. Fraud appears independent of recipient type.'}</div>
+    </div>
+
+    <div class="test-card">
+      <div class="test-header"><div class="test-name">5. T-Test — Transaction Amount: Fraud vs Legitimate</div>${sig(T.ttest.significant)}</div>
+      <div class="test-body">
+        <div class="test-stat"><div class="test-stat-val">${T.ttest.stat}</div><div class="test-stat-lbl">T-Statistic</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.ttest.p}</div><div class="test-stat-lbl">p-value</div></div>
+        <div class="test-stat"><div class="test-stat-val">${T.ttest.fraud_mean} vs ${T.ttest.legit_mean}</div><div class="test-stat-lbl">Fraud / Legit Avg</div></div>
+      </div>
+      <div class="test-interp">H₀: Average transaction amount is same for fraud and legitimate transactions. ${T.ttest.significant ? 'Rejected — fraud transactions differ significantly in amount.' : 'Cannot reject H₀ at α=0.05. No significant difference in amounts.'}</div>
+    </div>`;
+}
+
+// ── Model Report ──────────────────────────────────────────────────────────────
+function buildModels() {
+  if (!C || !S) return;
+  modelsBuilt = true;
+  document.getElementById('model-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon" style="background:var(--primary-light)">📈</div><div class="stat-label">Logistic Regression</div><div class="stat-value">${S.auc}</div><div class="stat-sub">AUC-ROC Score</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--yellow-light)">⛰</div><div class="stat-label">Ridge Regression</div><div class="stat-value">α=1.0</div><div class="stat-sub">L2 Regularization</div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:var(--green-light)">✂</div><div class="stat-label">Lasso Selection</div><div class="stat-value">${Object.values(C.lasso_coef).filter(v=>v!==0).length}/12</div><div class="stat-sub">Features retained</div></div>`;
+
+  const rows = Object.entries(C.lasso_coef)
+    .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]))
+    .map(([f,c]) => `<tr>
+      <td>${f.replace(/_enc$/,'').replace(/_/g,' ')}</td>
+      <td style="font-family:var(--mono);color:${c>0?'var(--primary)':c<0?'var(--red)':'var(--text3)'}">${(+c).toFixed(4)}</td>
+      <td>${c==0 ? '<span style="color:var(--text3);font-size:12px;">Zeroed out</span>' : '<span style="color:var(--green);font-size:12px;font-weight:600;">✓ Selected</span>'}</td>
+    </tr>`).join('');
+  document.getElementById('lasso-table').innerHTML = `
+    <table class="data-table"><tr><th>Feature</th><th>Coefficient</th><th>Lasso Status</th></tr>${rows}</table>`;
+}
+
+// ── Predict ───────────────────────────────────────────────────────────────────
+function renderResult(data, id) {
+  const isHigh = data.high;
+  const color  = isHigh ? 'var(--red)' : 'var(--green)';
+  const barBg  = isHigh ? 'var(--red)' : 'var(--green)';
+
+  // Reasons: if high risk → show flagged items; if low → show what's safe
+  let reasonsHtml = '';
+  if (isHigh && data.reasons.length) {
+    reasonsHtml = data.reasons.map(r => `<div class="reason-item flag">${r}</div>`).join('');
+  } else if (!isHigh) {
+    reasonsHtml = `<div class="reason-item ok">No high-risk indicators detected</div>`;
+    if (data.reasons.length) {
+      reasonsHtml += data.reasons.map(r => `<div class="reason-item flag" style="opacity:0.6;">${r} (low weight)</div>`).join('');
+    }
+  } else {
+    reasonsHtml = `<div class="reason-item ok">No significant risk factors found</div>`;
+  }
+
+  document.getElementById(id).innerHTML = `
+    <div class="result-header">
+      <div class="result-title">Prediction Result</div>
+      <div class="risk-pill ${isHigh?'high':'low'}">${isHigh?'🔴':'🟢'} ${data.risk}</div>
+    </div>
+    <div class="gauge-num">
+      <div class="gauge-prob" style="color:${color}">${data.probability}%</div>
+      <div class="gauge-sub">Fraud Probability</div>
+    </div>
+    <div class="prob-bar-wrap"><div class="prob-bar" style="width:${data.probability}%;background:${barBg};"></div></div>
+    <div class="why-title">${isHigh ? 'Risk factors detected:' : 'Why this looks safe:'}</div>
+    ${reasonsHtml}
+    <div class="result-note">Logistic Regression · 202 real UPI responses · AUC 0.90</div>`;
+}
+
+async function predict() {
+  const b = {
+    age: parseInt(document.getElementById('p-age').value),
+    new_recipient:  ts.nr  === 'yes' ? 1 : 0,
+    diff_location:  ts.dl  === 'yes' ? 1 : 0,
+    multiple_txns:  ts.mt  === 'yes' ? 1 : 0,
+    suspicious_link:ts.sl  === 'yes' ? 1 : 0,
+    asked_otp:      ts.otp === 'yes' ? 1 : 0,
+    amount_encoded: parseInt(document.getElementById('p-amount').value),
+    freq_encoded:   parseInt(document.getElementById('p-freq').value),
+    gender_enc:     parseInt(document.getElementById('p-gender').value),
+    upi_app_enc:    0,
+    time_of_txn_enc:parseInt(document.getElementById('p-time').value),
+    recipient_type_enc: parseInt(document.getElementById('p-recip').value)
+  };
+  try {
+    const d = await fetch(API + '/api/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(b) }).then(r=>r.json());
+    renderResult(d, 'result-panel');
+  } catch(e) {
+    document.getElementById('result-panel').innerHTML = '<div class="result-empty" style="color:var(--red);">⚠ Error contacting server</div>';
+  }
+}
+
+// Boot
+init();
+</script>
+</body>
+</html>

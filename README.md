@@ -2,7 +2,7 @@
 
 > **First student project to apply a full statistical inference pipeline — MLE, Hypothesis Testing, and Regularized Regression — on primary UPI transaction survey data, deployed as a live fraud detection engine.**
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-paysecure.onrender.com-4F46E5?style=for-the-badge)]([https://paysecure.onrender.com](https://paysecure-56hz.onrender.com)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-paysecure-56hz.onrender.com-4F46E5?style=for-the-badge)](https://paysecure-56hz.onrender.com)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge)](https://render.com)

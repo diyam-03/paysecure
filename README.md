@@ -1,4 +1,4 @@
-# 🛡 PaySecure — UPI Fraud Detection using Statistical Inference
+# 🛡 PaySecure - UPI Fraud Detection using Statistical Inference
 
 > **First student project to apply a full statistical inference pipeline — MLE, Hypothesis Testing, and Regularized Regression — on primary UPI transaction survey data, deployed as a live fraud detection engine.**
 

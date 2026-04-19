@@ -1,12 +1,18 @@
 # 🛡 PaySecure - UPI Fraud Detection using Statistical Inference
 
-> **First student project to apply a full statistical inference pipeline — MLE, Hypothesis Testing, and Regularized Regression — on primary UPI transaction survey data, deployed as a live fraud detection engine.**
+> A fully deployed web application that detects fraudulent UPI transactions using **real survey data** from 202 respondents and a complete statistical inference pipeline.
 
+<<<<<<< Updated upstream
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-paysecure-56hz.onrender.com-4F46E5?style=for-the-badge)](https://paysecure-56hz.onrender.com)
+=======
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-4F46E5?style=for-the-badge)](https://paysecure-56hz.onrender.com)
+>>>>>>> Stashed changes
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge)](https://render.com)
 [![AUC](https://img.shields.io/badge/AUC--ROC-0.90-success?style=for-the-badge)]()
+
+**Live App:** https://paysecure-56hz.onrender.com
 
 ---
 
@@ -127,4 +133,4 @@ uvicorn api:app --reload
 **Diya Mehta** · NMIMS MPSTME · Semester IV  
 **Rugved Tatkare** · NMIMS MPSTME · Semester IV
 
-Subject: Statistical Structures in Data and 
+Subject: Statistical Structures in Data and Inference

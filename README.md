@@ -2,17 +2,12 @@
 
 > A fully deployed web application that detects fraudulent UPI transactions using **real survey data** from 202 respondents and a complete statistical inference pipeline.
 
-<<<<<<< Updated upstream
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-paysecure-56hz.onrender.com-4F46E5?style=for-the-badge)](https://paysecure-56hz.onrender.com)
-=======
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-4F46E5?style=for-the-badge)](https://paysecure-56hz.onrender.com)
->>>>>>> Stashed changes
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge)](https://render.com)
 [![AUC](https://img.shields.io/badge/AUC--ROC-0.90-success?style=for-the-badge)]()
 
-**Live App:** https://paysecure-56hz.onrender.com
+🔗 **Live App:** https://paysecure-56hz.onrender.com
 
 ---
 
@@ -20,9 +15,9 @@
 
 UPI fraud in India is rising rapidly. Most detection systems rely on large corporate datasets and black-box models. PaySecure takes a different approach.
 
-> We collected **real data** from **202 people**, applied **rigorous statistical inference**, and built a **live fraud predictor** — all from scratch.
+> We collected **real data** from **202 people**, applied **rigorous statistical inference**, and built a **live fraud predictor** - all from scratch.
 
-Instead of downloading a dataset, we ran a Google Forms survey capturing real UPI behaviour — amounts, time of day, recipient type, OTP requests, and more. We then used classical statistics to understand the data before training any model.
+Instead of downloading a dataset, we ran a Google Forms survey capturing real UPI behaviour - amounts, time of day, recipient type, OTP requests, and more. We then used classical statistics to understand the data before training any model.
 
 ---
 
